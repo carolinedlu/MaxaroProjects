@@ -10,7 +10,7 @@ from io import BytesIO
 import base64
 import openai
 
-import config
+import VoiceBot.config as config
 
 openai.api_key = config.api_key
 openai.api_base = config.api_base
