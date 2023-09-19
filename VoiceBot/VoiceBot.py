@@ -42,8 +42,8 @@ def resize_svg(svg_path, width, height):
 
 size = 32
 
-mic_off = resize_svg("mic-off.svg", size, size)
-mic_on = resize_svg("mic-on.svg", size, size)
+mic_off = resize_svg("VoiceBot/mic-off.svg", size, size)
+mic_on = resize_svg("VoiceBot/mic-on.svg", size, size)
 
 
 def generate_response(prompt):
