@@ -10,10 +10,12 @@ from io import BytesIO
 import base64
 import openai
 
-openai.api_key = '54a267e072934050a8df635e4f6da7b5'
-openai.api_base = 'https://maxbotai.openai.azure.com/'
-openai.api_type = 'azure'
-openai.api_version = '2023-05-15'
+import config
+
+openai.api_key = config.api_key
+openai.api_base = config.api_base
+openai.api_type = config.api_type
+openai.api_version = config.api_version
 
 audio_byte_io = BytesIO()
 
