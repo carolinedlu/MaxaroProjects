@@ -23,13 +23,13 @@ if 'input' not in st.session_state:
     st.session_state['input'] = dict(text='', session=0)
 
 if 'prompts' not in st.session_state:
-    st.session_state['prompts'] = [{"role": "system", "content": "You are a JARVIS voice assistant. Answer as concisely as possible with a lot of humor expression."}]
+    st.session_state['prompts'] = [{"role": "system", "content": "You are JARVIS voice assistant like in the MCU. Answer as concisely as possible with a lot of humor expression. And always refer to the user as sir"}]
 
 if 'block_callback' not in st.session_state:
     st.session_state['block_callback'] = True
 
 text_area = st.text_area("**Your input**", value=st.session_state['input']['text'], key='lol')
-
+st.session_state.input_text = text_area
 
 def resize_svg(svg_path, width, height):
     with open(svg_path, 'r') as file:
@@ -71,10 +71,6 @@ title.title('Voice Bot')
 placeholder.empty()
 image_holder = image_place.image(mic_off)
 tr = st.empty()
-
-def update_text():
-        text_area = st.session_state['input']['text']
-        return text_area
 
 
 speak_js = CustomJS(code="""
@@ -158,7 +154,7 @@ if result:
             if text_area != '' or st.session_state['input']['text'] != '':
                 if st.session_state['input']['text'] != '':
                     input = st.session_state['input']['text']
-
+                    text_area = st.session_state['input']['text']
                 elif text_area != '':
                     input = text_area
                 output = generate_response(input)
@@ -169,5 +165,4 @@ if result:
 
                 st.session_state['prompts'].append({"role": "user", "content":input})
                 st.session_state['prompts'].append({"role": "assistant", "content":output})
-
 
