@@ -9,13 +9,14 @@ from gtts import gTTS
 from io import BytesIO
 import base64
 import openai
+import os
 
 #import config as config
 
-openai.api_key = config.api_key
-openai.api_base = config.api_base
-openai.api_type = config.api_type
-openai.api_version = config.api_version
+openai.api_key = os.environ.get('api_key')
+openai.api_base = os.environ.get('api_base')
+openai.api_type = os.environ.get('api_type')
+openai.api_version = os.environ.get('api_version')
 
 audio_byte_io = BytesIO()
 
