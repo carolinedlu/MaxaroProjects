@@ -135,13 +135,13 @@ if result:
     if "GET_TEXT" in result:
         if result.get("GET_TEXT")["t"] != '' and result.get("GET_TEXT")["s"] != st.session_state['input']['session'] :
             st.session_state['input']['text'] = result.get("GET_TEXT")["t"]
-            tr.text_area("**Your input**", value= st.session_state['input']['text'])
+            val = tr.text_area("**Your input**", value= st.session_state['input']['text'])
             st.session_state['input']['session'] = result.get("GET_TEXT")["s"]
             
 
     if "GET_INTRM" in result:
         if result.get("GET_INTRM") != '':
-            tr.text_area("**Your input**", value=st.session_state['input']['text']+' '+result.get("GET_INTRM"))
+            val = tr.text_area("**Your input**", value=st.session_state['input']['text']+' '+result.get("GET_INTRM"))
 
     if "GET_ONREC" in result:
         if result.get("GET_ONREC") == 'start':
