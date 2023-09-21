@@ -29,7 +29,7 @@ if 'prompts' not in st.session_state:
     st.session_state['prompts'] = [{"role": "system", "content": "You are JARVIS voice assistant like in the MCU. Answer as concisely as possible with a lot of humor expression. And always refer to the user as sir"}]
 
 tr = st.empty()
-tr.text_area("**Your input**", value=st.session_state['input']['text'])
+val = tr.text_area("**Your input**", value=st.session_state['input']['text'])
 
 def resize_svg(svg_path, width, height):
     with open(svg_path, 'r') as file:
@@ -151,8 +151,8 @@ if result:
             image_holder.image(mic_on)
         elif result.get("GET_ONREC") == 'stop':
             image_holder.image(mic_off)
-            if tr.text_area != '':
-                input = tr.text_area()
+            if val != '':
+                input = val
                 output = generate_response(input)
                 st.write("**ChatBot:**")
                 st.write(output)
@@ -161,5 +161,4 @@ if result:
 
                 st.session_state['prompts'].append({"role": "user", "content":input})
                 st.session_state['prompts'].append({"role": "assistant", "content":output})
-                tr.text_area("**Your input**", result.get("GET_TEXT")["t"])
 
