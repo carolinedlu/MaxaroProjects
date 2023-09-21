@@ -4,7 +4,7 @@ from panda3d.core import DirectionalLight, AmbientLight
 
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import CollisionTraverser, CollisionNode
-from panda3d.core import CollisionHandlerQueue, CollisionRay
+from panda3d.core import CollisionHandlerQueue, CollisionRay, CollisionHandlerEvent
 from panda3d.core import AmbientLight, DirectionalLight, LightAttrib
 from panda3d.core import TextNode, CollisionBox, Point3
 from panda3d.core import LPoint3, LVector3, BitMask32
@@ -19,18 +19,20 @@ loadPrcFile('settings.prc')
 class MyApp(ShowBase):
     def __init__(self):
         ShowBase.__init__(self)
-
         self.floor()
         self.set_cam()
         self.set_lights()
-        self.furniture()
         self.collition_setup()
+        self.furniture()
 
         self.dragging = False
         self.disableMouse()
         self.mouseTask = taskMgr.add(self.mouseTask, 'mouseTask')
         self.accept('mouse1', self.grabItem)
         self.accept('mouse1-up', self.releaseItem)
+        self.picker.showCollisions(render)
+
+        
 
     def floor(self):
         cm = CardMaker('floor')
@@ -62,23 +64,42 @@ class MyApp(ShowBase):
             box.reparentTo(render)
             box.setScale(0.5)  # Adjust the size as needed
             box.setPos(i*2 - 4, i*2 - 4, 0.5)  # Position them in the room
-            cNode = CollisionNode('cnode')
-            cNode.addSolid(CollisionBox(Point3(-1, -1, -1), Point3(1, 1, 1)))
-            cNode.setCollideMask(BitMask32.bit(1))
-            cNodePath = box.attachNewNode(cNode)
             
-            cNodePath.show()
+            dragNode = CollisionNode('drag')
+            cBox = CollisionBox(Point3(-1, -1, -1), Point3(1, 1, 1))
+            dragNode.addSolid(cBox)
+            dragNode.setIntoCollideMask(BitMask32.bit(1))
+            dragNode.set_from_collide_mask(0)
+            dragNodePath = box.attachNewNode(dragNode)
+            self.picker.addCollider(dragNodePath, self.pq)
+            
+            # Collision for furniture collision detection
+            cNode = CollisionNode('furniture')
+            cNode.addSolid(cBox)
+            cNode.setFromCollideMask(BitMask32.bit(2))
+            cNodePath = box.attachNewNode(cNode)
+            self.picker.addCollider(cNodePath, self.furnitureCollisionHandler)
+            
             self.furniture.append(box)
 
     def collition_setup(self):
         self.picker = CollisionTraverser()
         self.pq = CollisionHandlerQueue()
+        self.furnitureCollisionHandler = CollisionHandlerEvent()
+
+        self.furnitureCollisionHandler.setInPattern('furniture-into-furniture')
+
         self.pickerNode = CollisionNode('mouseRay')
         self.pickerNP = camera.attachNewNode(self.pickerNode)
         self.pickerNode.setFromCollideMask(BitMask32.bit(1))
         self.pickerRay = CollisionRay()
         self.pickerNode.addSolid(self.pickerRay)
         self.picker.addCollider(self.pickerNP, self.pq)
+
+        self.accept('furniture-into-furniture', self.handleCollision)
+
+    def handleCollision(self, entry):
+        print(entry)
 
     def mouseTask(self, task):
         if self.mouseWatcherNode.hasMouse():
@@ -95,7 +116,6 @@ class MyApp(ShowBase):
             self.picker.traverse(render)
             if self.pq.getNumEntries() > 0:
                 self.pq.sortEntries()
-
         return Task.cont
     
     def grabItem(self):
