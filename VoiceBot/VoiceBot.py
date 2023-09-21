@@ -29,7 +29,7 @@ if 'prompts' not in st.session_state:
     st.session_state['prompts'] = [{"role": "system", "content": "You are JARVIS voice assistant like in the MCU. Answer as concisely as possible with a lot of humor expression. And always refer to the user as sir"}]
 
 tr = st.empty()
-text_area = tr.text_area("**Your input**", value=st.session_state['input']['text'], key='lol')
+tr.text_area("**Your input**", value=st.session_state['input']['text'])
 
 def resize_svg(svg_path, width, height):
     with open(svg_path, 'r') as file:
@@ -135,12 +135,13 @@ if result:
     if "GET_TEXT" in result:
         if result.get("GET_TEXT")["t"] != '' and result.get("GET_TEXT")["s"] != st.session_state['input']['session'] :
             st.session_state['input']['text'] = result.get("GET_TEXT")["t"]
+            tr.text_area("**Your input**", value= st.session_state['input']['text'])
             st.session_state['input']['session'] = result.get("GET_TEXT")["s"]
             
 
     if "GET_INTRM" in result:
         if result.get("GET_INTRM") != '':
-            tr.text_area("**Your input**", result.get("GET_INTRM"))
+            tr.text_area("**Your input**", value=st.session_state['input']['text']+' '+result.get("GET_INTRM"))
 
     if "GET_ONREC" in result:
         if result.get("GET_ONREC") == 'start':
@@ -150,12 +151,8 @@ if result:
             image_holder.image(mic_on)
         elif result.get("GET_ONREC") == 'stop':
             image_holder.image(mic_off)
-            if text_area != '' or st.session_state['input']['text'] != '':
-                if st.session_state['input']['text'] != '':
-                    input = st.session_state['input']['text']
-                    #text_area = st.session_state['input']['text']
-                elif text_area != '':
-                    input = text_area
+            if tr.text_area != '':
+                input = tr.text_area
                 output = generate_response(input)
                 st.write("**ChatBot:**")
                 st.write(output)
