@@ -20,28 +20,11 @@ openai.api_version = os.environ.get('api_version')
 
 audio_byte_io = BytesIO()
 
-title, placeholder, image_place  = st.columns([10,10,1])
-
-if 'input' not in st.session_state:
-    st.session_state['input'] = dict(text='', session=0)
-
-if 'prompts' not in st.session_state:
-    st.session_state['prompts'] = [{"role": "system", "content": "You are JARVIS voice assistant like in the MCU. Answer as concisely as possible with a lot of humor expression. And always refer to the user as sir"}]
-
-tr = st.empty()
-val = tr.text_area("**Your input**", value=st.session_state['input']['text'])
-
-def resize_svg(svg_path, width, height):
+def resize_svg(svg_path, size):
     with open(svg_path, 'r') as file:
-        svg_content = file.read().replace('<svg ', f'<svg width="{width}" height="{height}" ')
+        svg_content = file.read().replace('<svg ', f'<svg width="{size}" height="{size}" ')
 
     return svg_content
-
-size = 32
-
-mic_off = resize_svg("VoiceBot/mic-off.svg", size, size)
-mic_on = resize_svg("VoiceBot/mic-on.svg", size, size)
-
 
 def generate_response(prompt):
 
@@ -65,6 +48,23 @@ def audio_output(output, input):
     sound_b64 = base64.b64encode(audio_byte_io.getvalue()).decode("utf-8")
     audio_html = f'<audio controls autoplay><source src="data:audio/mp3;base64,{sound_b64}"></audio>'
     audio.markdown(audio_html, unsafe_allow_html=True, help=input)
+
+
+if 'input' not in st.session_state:
+    st.session_state['input'] = dict(text='', session=0)
+
+if 'prompts' not in st.session_state:
+    st.session_state['prompts'] = [{"role": "system", "content": "Act like JARVIS voice assistant from in the MCU. Answer as concisely as possible with a lot of humor expression. And always refer to the user as sir"}]
+
+
+title, placeholder, image_place  = st.columns([10,10,1])
+
+tr = st.empty()
+val = tr.text_area("**Your input**", value=st.session_state['input']['text'])
+
+size = 32
+mic_off = resize_svg("VoiceBot/mic-off.svg", size)
+mic_on = resize_svg("VoiceBot/mic-on.svg", size)
     
 
 title.title('Voice Bot')
@@ -108,6 +108,7 @@ speak_js = CustomJS(code="""
     }
     recognition.start();
     """)
+
 enter_js = CustomJS(code="""
     document.dispatchEvent(new CustomEvent("GET_ONREC", {detail: 'stop'}));
 """)
@@ -138,7 +139,6 @@ if result:
             val = tr.text_area("**Your input**", value= st.session_state['input']['text'])
             st.session_state['input']['session'] = result.get("GET_TEXT")["s"]
             
-
     if "GET_INTRM" in result:
         if result.get("GET_INTRM") != '':
             val = tr.text_area("**Your input**", value=st.session_state['input']['text']+' '+result.get("GET_INTRM"))
@@ -161,4 +161,3 @@ if result:
 
                 st.session_state['prompts'].append({"role": "user", "content":input})
                 st.session_state['prompts'].append({"role": "assistant", "content":output})
-
