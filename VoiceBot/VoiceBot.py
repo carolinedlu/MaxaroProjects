@@ -28,7 +28,8 @@ if 'input' not in st.session_state:
 if 'prompts' not in st.session_state:
     st.session_state['prompts'] = [{"role": "system", "content": "You are JARVIS voice assistant like in the MCU. Answer as concisely as possible with a lot of humor expression. And always refer to the user as sir"}]
 
-text_area = st.text_area("**Your input**", value=st.session_state['input']['text'], key='lol')
+tr = st.empty()
+text_area = tr.text_area("**Your input**", value=st.session_state['input']['text'], key='lol')
 
 def resize_svg(svg_path, width, height):
     with open(svg_path, 'r') as file:
@@ -69,7 +70,6 @@ def audio_output(output, input):
 title.title('Voice Bot')
 placeholder.empty()
 image_holder = image_place.image(mic_off)
-tr = st.empty()
 
 
 speak_js = CustomJS(code="""
