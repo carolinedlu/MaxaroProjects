@@ -152,7 +152,7 @@ if result:
         elif result.get("GET_ONREC") == 'stop':
             image_holder.image(mic_off)
             if tr.text_area != '':
-                input = tr.text_area
+                input = tr.text_area()
                 output = generate_response(input)
                 st.write("**ChatBot:**")
                 st.write(output)
