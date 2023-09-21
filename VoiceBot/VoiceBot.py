@@ -164,4 +164,5 @@ if result:
 
                 st.session_state['prompts'].append({"role": "user", "content":input})
                 st.session_state['prompts'].append({"role": "assistant", "content":output})
+                tr.text_area("**Your input**", result.get("GET_TEXT")["t"])
 
