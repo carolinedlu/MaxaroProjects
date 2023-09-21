@@ -28,11 +28,7 @@ if 'input' not in st.session_state:
 if 'prompts' not in st.session_state:
     st.session_state['prompts'] = [{"role": "system", "content": "You are JARVIS voice assistant like in the MCU. Answer as concisely as possible with a lot of humor expression. And always refer to the user as sir"}]
 
-if 'block_callback' not in st.session_state:
-    st.session_state['block_callback'] = True
-
 text_area = st.text_area("**Your input**", value=st.session_state['input']['text'], key='lol')
-st.session_state.input_text = text_area
 
 def resize_svg(svg_path, width, height):
     with open(svg_path, 'r') as file:
@@ -133,7 +129,7 @@ result = streamlit_bokeh_events(
     key="listen",
     refresh_on_update=False,
     override_height=75,
-    debounce_time=50)
+    debounce_time=0)
 
 if result:
     if "GET_TEXT" in result:
@@ -144,7 +140,7 @@ if result:
 
     if "GET_INTRM" in result:
         if result.get("GET_INTRM") != '':
-            st.session_state['input']['text'] += ' '+result.get("GET_INTRM")
+            tr.text_area("**Your input**", result.get("GET_INTRM"))
 
     if "GET_ONREC" in result:
         if result.get("GET_ONREC") == 'start':
@@ -157,7 +153,7 @@ if result:
             if text_area != '' or st.session_state['input']['text'] != '':
                 if st.session_state['input']['text'] != '':
                     input = st.session_state['input']['text']
-                    text_area = st.session_state['input']['text']
+                    #text_area = st.session_state['input']['text']
                 elif text_area != '':
                     input = text_area
                 output = generate_response(input)
