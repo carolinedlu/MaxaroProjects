@@ -43,6 +43,9 @@ class MyApp(ShowBase):
         self.line_segs.setThickness(4)
         self.line_node = self.line_segs.create()
         self.line_node_path = self.render.attachNewNode(self.line_node)
+        self.distanceTextNodes = []
+        if not hasattr(self, 'lines_parent_node'):
+            self.lines_parent_node = self.render.attachNewNode("LinesParent")
 
     def room(self):
         room = loader.loadModel("./Living room/living room.blend")
@@ -120,15 +123,6 @@ class MyApp(ShowBase):
         movObject = entry.getFromNodePath().getParent()
         if entry.getIntoNodePath().getName() == 'furniture' and entry.getFromNodePath().getName() == 'furniture':
             movObject.setPos(entry.getSurfaceNormal(render) + movObject.getPos())
-        
-
-    def proximityIn(self, entry):
-        self.inProx = True
-        print('lol')
-
-    def proximityOut(self, entry):
-        self.inProx = False
-        self.line_node_path.removeNode()
 
     def mouseTask(self, task):
         if self.mouseWatcherNode.hasMouse():
@@ -155,11 +149,8 @@ class MyApp(ShowBase):
         self.dragging = False
 
     def drawLine(self, task):
-        if self.lineQ.getNumEntries() > 5:
+        if self.lineQ.getNumEntries() > 0:
             self.lineQ.sortEntries()
-            if not hasattr(self, 'lines_parent_node'):
-                self.lines_parent_node = self.render.attachNewNode("LinesParent")
-            
             # Remove all children of the parent node to clear previous lines
             self.lines_parent_node.node().removeAllChildren()
             
@@ -173,12 +164,32 @@ class MyApp(ShowBase):
                 line_segs.drawTo(ob2pos)
                 
                 distance = (ob1pos - ob2pos).length()
-                print(distance)
 
                 # Create a new node for the line and attach it to the parent node
                 line_node = line_segs.create()
                 self.lines_parent_node.attachNewNode(line_node)
-            
+
+                midpoint = (ob1pos + ob2pos) / 2
+                
+                if i < len(self.distanceTextNodes):
+                    textNode = self.distanceTextNodes[i]
+                    textNode.node().setText(f"{distance:.2f}")
+                    textNode.setPos(midpoint)
+                else:
+                    # Create a new text node for this line
+                    distanceTextNode = TextNode(f'distanceTextNode_{i}')
+                    distanceTextNode.setTextColor(1, 1, 1, 1)  # Set text color to white
+                    distanceText = self.render.attachNewNode(distanceTextNode)
+                    distanceText.setScale(0.1)  # Adjust the scale as needed
+                    distanceText.setPos(midpoint)
+                    distanceTextNode.setText(f"{distance:.2f}")
+                    self.distanceTextNodes.append(distanceText)
+        else:
+            print("No collisions")
+            for textNode in self.distanceTextNodes:
+                textNode.removeNode()
+            self.lines_parent_node.node().removeAllChildren()
+            self.distanceTextNodes.clear()
         return Task.cont
 
 def PointAtZ(z, point, vec):
