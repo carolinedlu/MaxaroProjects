@@ -3,10 +3,10 @@ from panda3d.core import loadPrcFile
 from panda3d.core import DirectionalLight, AmbientLight
 
 from direct.showbase.ShowBase import ShowBase
-from panda3d.core import CollisionTraverser, CollisionNode
+from panda3d.core import CollisionTraverser, CollisionNode, LineSegs, CollisionSolid
 from panda3d.core import CollisionHandlerQueue, CollisionRay, CollisionHandlerEvent
 from panda3d.core import AmbientLight, DirectionalLight, LightAttrib
-from panda3d.core import TextNode, CollisionBox, Point3
+from panda3d.core import TextNode, CollisionBox, Point3, NodePath
 from panda3d.core import LPoint3, LVector3, BitMask32
 from direct.gui.OnscreenText import OnscreenText
 from direct.showbase.DirectObject import DirectObject
@@ -19,13 +19,13 @@ loadPrcFile('settings.prc')
 class MyApp(ShowBase):
     def __init__(self):
         ShowBase.__init__(self)
-        self.floor()
         self.set_cam()
         self.set_lights()
-        self.collition_setup()
-        self.furniture()
-        self.room()
+        self.collision_setup()
         self.init()
+        self.furniture()
+        #self.room()
+        self.taskMgr.add(self.drawLine, "update_line_task")
         
 
         
@@ -35,19 +35,20 @@ class MyApp(ShowBase):
         self.mouseTask = taskMgr.add(self.mouseTask, 'mouseTask')
         self.accept('mouse1', self.grabItem)
         self.accept('mouse1-up', self.releaseItem)
-        self.picker.showCollisions(render)
+        #self.picker.showCollisions(render)
+        self.inProx = False
+        self.obj1 = None
+        self.obj2 = None
+        self.line_segs = LineSegs()
+        self.line_segs.setThickness(4)
+        self.line_node = self.line_segs.create()
+        self.line_node_path = self.render.attachNewNode(self.line_node)
 
     def room(self):
         room = loader.loadModel("./Living room/living room.blend")
         room.reparentTo(render)
         room.setPos(0, 0, -1)
-        room.setScale(4)
-    def floor(self):
-        cm = CardMaker('floor')
-        cm.setFrame(-8, 8, -8, 8)
-        floor = render.attachNewNode(cm.generate())
-        floor.setColor(0.7, 0.7, 0.7, 1)  # Set the color to a light gray
-        floor.setP(-90)  # Rotate it to be horizontal    
+        room.setScale(4)  
     
     def set_cam(self):
         camera.setPosHpr(5, -20, 10, 0, 0, 0)  # Set the camera
@@ -64,7 +65,6 @@ class MyApp(ShowBase):
         ambientLightNodePath = render.attachNewNode(ambientLight)
         render.setLight(ambientLightNodePath)
 
-    
     def furniture(self):
         self.furniture = []
         for i in range(5):  # Create 5 pieces of furniture
@@ -86,25 +86,26 @@ class MyApp(ShowBase):
             cNode.addSolid(cBox)
             cNode.setFromCollideMask(BitMask32.bit(2))
             cNodePath = box.attachNewNode(cNode)
-            self.picker.addCollider(cNodePath, self.furnitureCollisionHandler)
+            self.picker.addCollider(cNodePath, self.furColHandler)
 
+            rad = 2
             proximityNode = CollisionNode('proximity')
-            proximityBox = CollisionBox(Point3(-2, -2, -1), Point3(2, 2, 1))
+            proximityBox = CollisionBox(Point3(-rad, -rad, -1), Point3(rad, rad, 1))
+            proximityBox.setTangible(False)
             proximityNode.addSolid(proximityBox)
-            proximityNode.setIntoCollideMask(BitMask32.bit(3))
-            proximityNode.set_from_collide_mask(0)
+            proximityNode.setIntoCollideMask(0)
+            proximityNode.setFromCollideMask(BitMask32.bit(3))
             proximityNodePath = box.attachNewNode(proximityNode)
-            self.picker.addCollider(proximityNodePath, self.furnitureCollisionHandler)
+            self.picker.addCollider(proximityNodePath, self.lineQ)
             
             self.furniture.append(box)
 
-    def collition_setup(self):
+    def collision_setup(self):
         self.picker = CollisionTraverser()
         self.pq = CollisionHandlerQueue()
-        self.furnitureCollisionHandler = CollisionHandlerEvent()
-
-        self.furnitureCollisionHandler.setInPattern('furniture-into-furniture')
-        self.furnitureCollisionHandler.setInPattern('proximity-into-proximity')
+        self.lineQ = CollisionHandlerQueue()
+        self.furColHandler = CollisionHandlerEvent()
+        self.furColHandler.setInPattern('furniture-into-furniture')
 
         self.pickerNode = CollisionNode('mouseRay')
         self.pickerNP = camera.attachNewNode(self.pickerNode)
@@ -116,13 +117,18 @@ class MyApp(ShowBase):
         self.accept('furniture-into-furniture', self.handleCollision)
 
     def handleCollision(self, entry):
-        print(entry.getIntoNodePath().getName())
-        if entry.getIntoNodePath().getName() == 'furniture':
-            movObject = entry.getFromNodePath().getParent()
+        movObject = entry.getFromNodePath().getParent()
+        if entry.getIntoNodePath().getName() == 'furniture' and entry.getFromNodePath().getName() == 'furniture':
             movObject.setPos(entry.getSurfaceNormal(render) + movObject.getPos())
+        
 
-        if entry.getIntoNodePath().getName() == 'proximity':
-            print(entry)
+    def proximityIn(self, entry):
+        self.inProx = True
+        print('lol')
+
+    def proximityOut(self, entry):
+        self.inProx = False
+        self.line_node_path.removeNode()
 
     def mouseTask(self, task):
         if self.mouseWatcherNode.hasMouse():
@@ -147,6 +153,33 @@ class MyApp(ShowBase):
 
     def releaseItem(self):
         self.dragging = False
+
+    def drawLine(self, task):
+        if self.lineQ.getNumEntries() > 5:
+            self.lineQ.sortEntries()
+            if not hasattr(self, 'lines_parent_node'):
+                self.lines_parent_node = self.render.attachNewNode("LinesParent")
+            
+            # Remove all children of the parent node to clear previous lines
+            self.lines_parent_node.node().removeAllChildren()
+            
+            for i in range(self.lineQ.getNumEntries()):
+                self.ent = self.lineQ.getEntry(i)
+                ob1pos = self.ent.getFromNodePath().getParent().getPos()
+                ob2pos = self.ent.getIntoNodePath().getParent().getPos()
+                # Create a new LineSegs for each entry
+                line_segs = LineSegs()
+                line_segs.moveTo(ob1pos)
+                line_segs.drawTo(ob2pos)
+                
+                distance = (ob1pos - ob2pos).length()
+                print(distance)
+
+                # Create a new node for the line and attach it to the parent node
+                line_node = line_segs.create()
+                self.lines_parent_node.attachNewNode(line_node)
+            
+        return Task.cont
 
 def PointAtZ(z, point, vec):
     return point + vec * ((z - point.getZ()) / vec.getZ())
