@@ -24,7 +24,12 @@ class MyApp(ShowBase):
         self.set_lights()
         self.collition_setup()
         self.furniture()
+        self.room()
+        self.init()
+        
 
+        
+    def init(self):
         self.dragging = False
         self.disableMouse()
         self.mouseTask = taskMgr.add(self.mouseTask, 'mouseTask')
@@ -32,11 +37,14 @@ class MyApp(ShowBase):
         self.accept('mouse1-up', self.releaseItem)
         self.picker.showCollisions(render)
 
-        
-
+    def room(self):
+        room = loader.loadModel("./Living room/living room.blend")
+        room.reparentTo(render)
+        room.setPos(0, 0, -1)
+        room.setScale(4)
     def floor(self):
         cm = CardMaker('floor')
-        cm.setFrame(-8, 8, -8, 8)  # This will create a plane of size 16x16
+        cm.setFrame(-8, 8, -8, 8)
         floor = render.attachNewNode(cm.generate())
         floor.setColor(0.7, 0.7, 0.7, 1)  # Set the color to a light gray
         floor.setP(-90)  # Rotate it to be horizontal    
@@ -79,6 +87,14 @@ class MyApp(ShowBase):
             cNode.setFromCollideMask(BitMask32.bit(2))
             cNodePath = box.attachNewNode(cNode)
             self.picker.addCollider(cNodePath, self.furnitureCollisionHandler)
+
+            proximityNode = CollisionNode('proximity')
+            proximityBox = CollisionBox(Point3(-2, -2, -1), Point3(2, 2, 1))
+            proximityNode.addSolid(proximityBox)
+            proximityNode.setIntoCollideMask(BitMask32.bit(3))
+            proximityNode.set_from_collide_mask(0)
+            proximityNodePath = box.attachNewNode(proximityNode)
+            self.picker.addCollider(proximityNodePath, self.furnitureCollisionHandler)
             
             self.furniture.append(box)
 
@@ -88,6 +104,7 @@ class MyApp(ShowBase):
         self.furnitureCollisionHandler = CollisionHandlerEvent()
 
         self.furnitureCollisionHandler.setInPattern('furniture-into-furniture')
+        self.furnitureCollisionHandler.setInPattern('proximity-into-proximity')
 
         self.pickerNode = CollisionNode('mouseRay')
         self.pickerNP = camera.attachNewNode(self.pickerNode)
@@ -99,7 +116,13 @@ class MyApp(ShowBase):
         self.accept('furniture-into-furniture', self.handleCollision)
 
     def handleCollision(self, entry):
-        print(entry)
+        print(entry.getIntoNodePath().getName())
+        if entry.getIntoNodePath().getName() == 'furniture':
+            movObject = entry.getFromNodePath().getParent()
+            movObject.setPos(entry.getSurfaceNormal(render) + movObject.getPos())
+
+        if entry.getIntoNodePath().getName() == 'proximity':
+            print(entry)
 
     def mouseTask(self, task):
         if self.mouseWatcherNode.hasMouse():
