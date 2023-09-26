@@ -207,7 +207,7 @@ class MyApp(ShowBase):
     def drawLine(self, task):
         self.lines_parent_node.node().removeAllChildren()
         if self.lineQ.getNumEntries() > 0:
-            self.lineQ.sortEntries()
+            self.lineQ.sortEntries()   # Problem: Es werden 2 kollisionen entdeckt und 2 linien gezeichnet + ban verschieben mit vorhandener verbindung werden texte net gelöscht
             # Remove all children of the parent node to clear previous lines
             
             for i in range(self.lineQ.getNumEntries()):
@@ -238,12 +238,11 @@ class MyApp(ShowBase):
                 
                 if i < len(self.distanceTextNodes):
                     textNode = self.distanceTextNodes[i]
-                    textNode.node().setText(f"{distance:.2f}")
+                    textNode.node().setText(textNode.getName())#f"{distance:.2f}")
                     textNode.setPos(text_position)
                     textNode.lookAt(camera)
                     textNode.setHpr(90, 0, 0)
                 else:
-                    print("else")
                     distanceTextNode = TextNode(f'distanceTextNode_{i}')
                     distanceTextNode.setTextColor(1, 1, 1, 1)  # Set text color to white
                     distanceText = self.render.attachNewNode(distanceTextNode)
