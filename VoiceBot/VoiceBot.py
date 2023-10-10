@@ -63,7 +63,7 @@ def audio_output(output, input):
     </script>
     """
 
-    no.markdown(audio_ended_js, unsafe_allow_html=True)
+    audio.markdown(audio_ended_js, unsafe_allow_html=True)
 
 
 if 'input' not in st.session_state:
@@ -95,7 +95,6 @@ speak_js = CustomJS(code="""
     recognition.continuous = false;
     recognition.interimResults = true;
     recognition.lang = 'en';
-    alert("Audio ended!");
 
     document.dispatchEvent(new CustomEvent("GET_ONREC", {detail: 'start'}));
     
