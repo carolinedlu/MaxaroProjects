@@ -46,8 +46,19 @@ def audio_output(output, input):
     tts.write_to_fp(audio_byte_io)
     
     sound_b64 = base64.b64encode(audio_byte_io.getvalue()).decode("utf-8")
-    audio_html = f'<audio controls autoplay><source src="data:audio/mp3;base64,{sound_b64}"></audio>'
-    audio.markdown(audio_html, unsafe_allow_html=True, help=input)
+    audio_html = f'<audio id="audioElement" controls autoplay><source src="data:audio/mp3;base64,{sound_b64}"></audio>'
+    audio.markdown(audio_html, unsafe_allow_html=True)
+
+    audio_ended_js = """
+    <script>
+        document.getElementById("audioElement").addEventListener("ended", function(){
+            alert("The audio has ended");
+            Bokeh.documents[0].get_model_by_name("speak_button").trigger("click");
+        });
+    </script>
+    """
+
+    audio.markdown(audio_ended_js, unsafe_allow_html=True)
 
 
 if 'input' not in st.session_state:
@@ -116,7 +127,7 @@ enter_js = CustomJS(code="""
 
 button_size = 30
 
-speak_button = Button(label="Speak", button_type="success", width=button_size, height=button_size)
+speak_button = Button(label="Speak", button_type="success", width=button_size, height=button_size, name = 'speak_button')
 enter_button = Button(label="Enter", button_type="success", width=button_size, height=button_size)
 
 speak_button.js_on_event("button_click", speak_js)

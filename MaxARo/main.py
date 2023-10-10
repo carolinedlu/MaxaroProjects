@@ -1,13 +1,13 @@
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import loadPrcFile
-from panda3d.core import DirectionalLight, AmbientLight
+from panda3d.core import DirectionalLight, AmbientLight, PointLight
 
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import CollisionTraverser, CollisionNode, LineSegs, CollisionSolid
 from panda3d.core import CollisionHandlerQueue, CollisionRay, CollisionHandlerEvent
 from panda3d.core import AmbientLight, DirectionalLight, LightAttrib
 from panda3d.core import TextNode, CollisionBox, Point3, NodePath
-from panda3d.core import LPoint3, LVector3, BitMask32
+from panda3d.core import LPoint3, LVector3, BitMask32, Vec3, VBase4, TextureStage
 from direct.gui.OnscreenText import OnscreenText
 from direct.showbase.DirectObject import DirectObject
 from direct.task.Task import Task
@@ -25,7 +25,7 @@ class MyApp(ShowBase):
         self.collision_setup()
         self.init()
         self.furniture()
-        #self.room()
+        self.room()
         self.taskMgr.add(self.drawLine, "update_line_task")
         
 
@@ -36,7 +36,7 @@ class MyApp(ShowBase):
         self.mouseTask = taskMgr.add(self.mouseTask, 'mouseTask')
         self.accept('mouse1', self.grabItem)
         self.accept('mouse1-up', self.releaseItem)
-        #self.picker.showCollisions(render)
+        self.picker.showCollisions(render)
         self.inProx = False
         self.obj1 = None
         self.obj2 = None
@@ -45,25 +45,63 @@ class MyApp(ShowBase):
             self.lines_parent_node = self.render.attachNewNode("LinesParent")
 
     def room(self):
-        room = loader.loadModel("./Living room/living room.blend")
-        room.reparentTo(render)
-        room.setPos(0, 0, -1)
-        room.setScale(4)  
+        def add_collision_box(plane, center, half_diagonal, name):
+            cbox = CollisionBox(center, half_diagonal)
+            cnode = CollisionNode(name)
+            cnode.setIntoCollideMask(BitMask32.bit(2))
+            cnode.setFromCollideMask(0)
+            cnode.addSolid(cbox)
+            plane.attachNewNode(cnode)
+
+        
+        wall_tex = loader.loadTexture("wall.jpg")
+        floor_tex = loader.loadTexture("floor.jpg")
+        ceiling_tex = loader.loadTexture("ceiling.jpg")
+
+        cm = CardMaker("plane")
+        cm.setFrame(-10, 10, -10, 10)
+
+        floor = self.render.attachNewNode(cm.generate())
+        floor.setPos(0, 0, 0)
+        floor.setP(-90)
+        floor.setTexture(floor_tex)
+        floor.setTexScale(TextureStage.getDefault(), 1.5, 1.5)
+
+        left = self.render.attachNewNode(cm.generate())
+        left.setPos(-10, 0, 0)
+        left.setH(90)
+        left.setTexture(wall_tex)
+        left.setTexScale(TextureStage.getDefault(), 2, 2)
+        add_collision_box(left, LPoint3(-10, 0, 0), LPoint3(10, .1, 10), "wall_left")
+        
+        right = self.render.attachNewNode(cm.generate())
+        right.setPos(0, 10, 0)
+        right.setTexture(wall_tex)
+        right.setTexScale(TextureStage.getDefault(), 2, 2)
+        add_collision_box(right, LPoint3(-10, -0, 0), LVector3(10, .1, 10), "wall_right")
+
+        ceiling = self.render.attachNewNode(cm.generate())
+        ceiling.setPos(0, 0, 10)
+        ceiling.setP(90)
+        ceiling.setTexture(ceiling_tex)
     
     def set_cam(self):
-        camera.setPosHpr(15, 0, 5, 0, 0, 0)  # Set the camera
-        camera.lookAt(0, 0, 0)
+        #camera.setPosHpr(15, -12.5, 7.5, 0, 0, 0)  # Set the camera
+        camera.setPosHpr(15, -12.5, 50, 0, 0, 0)
+        camera.lookAt(0, 0, 5)
 
     def set_lights(self):
-        mainLight = DirectionalLight('main light')
+        mainLight = PointLight('main light')
         mainLightNodePath = render.attachNewNode(mainLight)
-        mainLightNodePath.setHpr(30, -60, 0)
+        mainLightNodePath.setPos(3, -3, 8)
+        mainLight.setColor(VBase4(1.9, 1.82, 1.33, 1))
         render.setLight(mainLightNodePath)
 
         ambientLight = AmbientLight('ambient light')
-        ambientLight.setColor((0.2, 0.2, 0.2, 1))
+        ambientLight.setColor(VBase4(0.1, 0.1, 0.1, .5))
         ambientLightNodePath = render.attachNewNode(ambientLight)
         render.setLight(ambientLightNodePath)
+
 
     def furniture(self):
         self.furniture = []
@@ -120,7 +158,6 @@ class MyApp(ShowBase):
 
     def handleCollision(self, entry):
         if 'fur' in entry.getIntoNodePath().getName() and entry.getFromNodePath().getName() in self.movObject.getName():
-            
             self.othObj = entry.getIntoNodePath().getParent()
             self.pos = self.findAngle(self.movObject.getParent().getPos(), self.othObj.getPos())
             if self.pos == 'front':
@@ -135,6 +172,14 @@ class MyApp(ShowBase):
             elif self.pos == 'right':
                 self.allowX = True
                 self.allowY = False
+
+        if 'wall' in entry.getIntoNodePath().getName() and entry.getFromNodePath().getName() in self.movObject.getName():
+            print(entry.getIntoNodePath().getName())
+            if 'left' in entry.getIntoNodePath().getName():
+                self.allowX = False
+            elif 'right' in entry.getIntoNodePath().getName():
+                self.allowY = False
+
 
     def mouseTask(self, task):
         if self.mouseWatcherNode.hasMouse():
@@ -158,9 +203,12 @@ class MyApp(ShowBase):
                 if self.prevPos:
                     self.direction = newPos - self.prevPos
                     self.direction.normalize()
+                    
+                
 
                 if hasattr(self, 'direction') and hasattr(self, 'pos'):
-                    
+                    print(self.direction)
+                    print(self.pos)
                     if self.pos == 'front' and self.direction.getX() > 0:
                         self.allowX = True
                     elif self.pos == 'right' and self.direction.getY() > 0:
@@ -179,6 +227,8 @@ class MyApp(ShowBase):
                                 self.allowX = True
                             elif (minMov.getX() > maxOth.getX() or maxMov.getX() < minOth.getX()) and (self.pos == 'left' or self.pos == 'right'):
                                 self.allowY = True
+
+                    
                 except AttributeError:
                     pass
 
@@ -207,8 +257,6 @@ class MyApp(ShowBase):
     def drawLine(self, task):
         self.lines_parent_node.node().removeAllChildren()
         if self.lineQ.getNumEntries() > 0:
-            self.lineQ.sortEntries()   # Problem: Es werden 2 kollisionen entdeckt und 2 linien gezeichnet + ban verschieben mit vorhandener verbindung werden texte net gelöscht
-            # Remove all children of the parent node to clear previous lines
             
             for i in range(self.lineQ.getNumEntries()):
                 self.ent = self.lineQ.getEntry(i)
