@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as html
 from bokeh.models import CustomJS
 from bokeh.models import Button
 from bokeh.layouts import row
@@ -47,11 +48,10 @@ def audio_output(output, input):
     
     sound_b64 = base64.b64encode(audio_byte_io.getvalue()).decode("utf-8")
     audio_html = f'<audio id="audioElement" controls autoplay><source src="data:audio/mp3;base64,{sound_b64}"></audio>'
-    
-    #audio.markdown(audio_html, unsafe_allow_html=True)
     audio.markdown(audio_html, unsafe_allow_html=True)
 
-    speak_js()
+    my_html = f'<script>{speak_js}</script>'
+    html(my_html)
 
 
 
