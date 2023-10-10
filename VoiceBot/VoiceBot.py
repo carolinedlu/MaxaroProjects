@@ -39,6 +39,44 @@ def generate_response(prompt):
     message=completion.choices[0].message.content
     return message
 
+def audio_output(output, input):
+    audio = st.empty()
+    audio_byte_io = BytesIO()
+    
+    tts = gTTS(output, lang='en', tld='com')
+    tts.write_to_fp(audio_byte_io)
+    
+    sound_b64 = base64.b64encode(audio_byte_io.getvalue()).decode("utf-8")
+    audio_html = f'<audio id="audioElement" controls autoplay><source src="data:audio/mp3;base64,{sound_b64}"></audio>'
+    audio.markdown(audio_html, unsafe_allow_html=True)
+
+    html(speak_js)
+
+
+
+
+if 'input' not in st.session_state:
+    st.session_state['input'] = dict(text='', session=0)
+
+if 'prompts' not in st.session_state:
+    st.session_state['prompts'] = [{"role": "system", "content": "Act like JARVIS voice assistant from in the MCU. Answer as concisely as possible with a lot of humor expression. And always refer to the user as sir"}]
+
+
+title, placeholder, image_place  = st.columns([10,10,1])
+
+tr = st.empty()
+val = tr.text_area("**Your input**", value=st.session_state['input']['text'])
+
+size = 32
+mic_off = resize_svg("VoiceBot/mic-off.svg", size)
+mic_on = resize_svg("VoiceBot/mic-on.svg", size)
+    
+
+title.title('Voice Bot')
+placeholder.empty()
+image_holder = image_place.image(mic_off)
+
+
 speak_js = CustomJS(code="""
     var value = "";
     var rand = 0;
@@ -75,47 +113,6 @@ speak_js = CustomJS(code="""
     }
     recognition.start();
     """)
-
-
-def audio_output(output, input):
-    audio = st.empty()
-    audio_byte_io = BytesIO()
-    
-    tts = gTTS(output, lang='en', tld='com')
-    tts.write_to_fp(audio_byte_io)
-    
-    sound_b64 = base64.b64encode(audio_byte_io.getvalue()).decode("utf-8")
-    audio_html = f'<audio id="audioElement" controls autoplay><source src="data:audio/mp3;base64,{sound_b64}"></audio>'
-    audio.markdown(audio_html, unsafe_allow_html=True)
-
-    my_html = f'<script>{speak_js}</script>'
-    html(my_html)
-
-
-
-
-if 'input' not in st.session_state:
-    st.session_state['input'] = dict(text='', session=0)
-
-if 'prompts' not in st.session_state:
-    st.session_state['prompts'] = [{"role": "system", "content": "Act like JARVIS voice assistant from in the MCU. Answer as concisely as possible with a lot of humor expression. And always refer to the user as sir"}]
-
-
-title, placeholder, image_place  = st.columns([10,10,1])
-
-tr = st.empty()
-val = tr.text_area("**Your input**", value=st.session_state['input']['text'])
-
-size = 32
-mic_off = resize_svg("VoiceBot/mic-off.svg", size)
-mic_on = resize_svg("VoiceBot/mic-on.svg", size)
-    
-
-title.title('Voice Bot')
-placeholder.empty()
-image_holder = image_place.image(mic_off)
-
-
 
 enter_js = CustomJS(code="""
     document.dispatchEvent(new CustomEvent("GET_ONREC", {detail: 'stop'}));
