@@ -56,6 +56,7 @@ def audio_output(output, input):
             });
         }
     """
+    audio.markdown(audio_html, unsafe_allow_html=True)
     audio.markdown(audio_ended_js, unsafe_allow_html=True)
 
 
