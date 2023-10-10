@@ -40,7 +40,6 @@ def generate_response(prompt):
 
 def audio_output(output, input):
     audio = st.empty()
-    no = st.empty()
     audio_byte_io = BytesIO()
     
     tts = gTTS(output, lang='en', tld='com')
@@ -50,8 +49,6 @@ def audio_output(output, input):
     audio_html = f'<audio id="audioElement" controls autoplay><source src="data:audio/mp3;base64,{sound_b64}"></audio>'
     
     audio_ended_js = """
-    <script>
-        alert("Audio ended!");
         document.addEventListener("DOMContentLoaded", function(event) {
             var audioElem = document.getElementById("audioElement");
             if (audioElem) {
@@ -60,10 +57,9 @@ def audio_output(output, input):
                 });
             }
         });
-    </script>
     """
     audio.markdown(audio_html, unsafe_allow_html=True)
-    no.markdown(audio_ended_js, unsafe_allow_html=True)
+    audio.markdown(audio_ended_js, unsafe_allow_html=True)
 
 
 
