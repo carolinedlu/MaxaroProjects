@@ -49,16 +49,20 @@ def audio_output(output, input):
     audio_html = f'<audio id="audioElement" controls autoplay><source src="data:audio/mp3;base64,{sound_b64}"></audio>'
     audio.markdown(audio_html, unsafe_allow_html=True)
 
-    #audio_ended_js = """
-    #<script>
-    #    document.getElementById("audioElement").addEventListener("ended", function(){
-    #        alert("The audio has ended");
-    #        Bokeh.documents[0].get_model_by_name("speak_button").trigger("click");
-    #    });
-    #</script>
-    #"""
+    audio_ended_js = """
+    <script>
+        document.addEventListener("DOMContentLoaded", function(event) {
+            var audioElem = document.getElementById("audioElement");
+            if (audioElem) {
+                audioElem.addEventListener("ended", function(){
+                    alert("Audio ended!");
+                });
+            }
+        });
+    </script>
+    """
 
-    #audio.markdown(audio_ended_js, unsafe_allow_html=True)
+    audio.markdown(audio_ended_js, unsafe_allow_html=True)
 
 
 if 'input' not in st.session_state:
