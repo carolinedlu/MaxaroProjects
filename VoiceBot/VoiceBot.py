@@ -51,6 +51,7 @@ def audio_output(output, input):
     
     audio_ended_js = """
     <script>
+        alert("Audio ended!");
         document.addEventListener("DOMContentLoaded", function(event) {
             var audioElem = document.getElementById("audioElement");
             if (audioElem) {
@@ -61,9 +62,9 @@ def audio_output(output, input):
         });
     </script>
     """
-    audio.markdown(audio_ended_js, unsafe_allow_html=True)
-
     audio.markdown(audio_html, unsafe_allow_html=True)
+    no.markdown(audio_ended_js, unsafe_allow_html=True)
+
 
 
 if 'input' not in st.session_state:
