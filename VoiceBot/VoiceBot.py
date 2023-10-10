@@ -95,6 +95,7 @@ speak_js = CustomJS(code="""
     recognition.continuous = false;
     recognition.interimResults = true;
     recognition.lang = 'en';
+    alert("Audio ended!");
 
     document.dispatchEvent(new CustomEvent("GET_ONREC", {detail: 'start'}));
     
