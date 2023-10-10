@@ -49,17 +49,15 @@ def audio_output(output, input):
     audio_html = f'<audio id="audioElement" controls autoplay><source src="data:audio/mp3;base64,{sound_b64}"></audio>'
     
     audio_ended_js = """
-        document.addEventListener("DOMContentLoaded", function(event) {
-            var audioElem = document.getElementById("audioElement");
-            if (audioElem) {
-                audioElem.addEventListener("ended", function(){
-                    alert("Audio ended!");
-                });
-            }
-        });
+        var audioElem = document.getElementById("audioElement");
+        if (audioElem) {
+            audioElem.addEventListener("ended", function(){
+                alert("Audio ended!");
+            });
+        }
     """
-    audio.markdown(audio_html, unsafe_allow_html=True)
     audio.markdown(audio_ended_js, unsafe_allow_html=True)
+
 
 
 
