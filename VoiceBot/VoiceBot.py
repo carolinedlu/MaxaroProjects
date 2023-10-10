@@ -46,15 +46,12 @@ def audio_output(output, input):
     tts.write_to_fp(audio_byte_io)
     
     sound_b64 = base64.b64encode(audio_byte_io.getvalue()).decode("utf-8")
-    #audio_html = f'<audio id="audioElement" controls autoplay><source src="data:audio/mp3;base64,{sound_b64}"></audio>'
+    audio_html = f'<audio id="audioElement" controls autoplay><source src="data:audio/mp3;base64,{sound_b64}"></audio>'
     
-    audio_ended_js = """
-    <script>
-        alert("JavaScript is running!");
-    </script>
-    """
     #audio.markdown(audio_html, unsafe_allow_html=True)
-    audio.markdown(audio_ended_js, unsafe_allow_html=True)
+    audio.markdown(audio_html, unsafe_allow_html=True)
+
+    speak_js()
 
 
 
