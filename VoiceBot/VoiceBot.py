@@ -49,13 +49,7 @@ def audio_output(output, input):
     sound_b64 = base64.b64encode(audio_byte_io.getvalue()).decode("utf-8")
     audio_html = f'<audio id="audioElement" controls autoplay><source src="data:audio/mp3;base64,{sound_b64}"></audio>'
     audio.markdown(audio_html, unsafe_allow_html=True)
-    my_js = """
-    alert("Hola mundo");
-    """
-
-    # Wrapt the javascript as html code
-    my_html = f"<script>{my_js}</script>"
-    html(my_html)
+    
 
 
 

@@ -3,7 +3,7 @@ from panda3d.core import loadPrcFile
 from panda3d.core import DirectionalLight, AmbientLight, PointLight
 
 from direct.showbase.ShowBase import ShowBase
-from panda3d.core import CollisionTraverser, CollisionNode, LineSegs, CollisionSolid
+from panda3d.core import CollisionTraverser, CollisionNode, LineSegs, CollisionHandlerPusher
 from panda3d.core import CollisionHandlerQueue, CollisionRay, CollisionHandlerEvent
 from panda3d.core import AmbientLight, DirectionalLight, LightAttrib
 from panda3d.core import TextNode, CollisionBox, Point3, NodePath
@@ -55,8 +55,8 @@ class MyApp(ShowBase):
 
         
         wall_tex = loader.loadTexture("wall.jpg")
-        floor_tex = loader.loadTexture("floor.jpg")
-        ceiling_tex = loader.loadTexture("ceiling.jpg")
+        ceiling_tex = loader.loadTexture("floor.jpg")
+        floor_tex = loader.loadTexture("ceiling.jpg")
 
         cm = CardMaker("plane")
         cm.setFrame(-10, 10, -10, 10)
@@ -65,20 +65,20 @@ class MyApp(ShowBase):
         floor.setPos(0, 0, 0)
         floor.setP(-90)
         floor.setTexture(floor_tex)
-        floor.setTexScale(TextureStage.getDefault(), 1.5, 1.5)
+        floor.setTexScale(TextureStage.getDefault(), 3, 3)
 
         left = self.render.attachNewNode(cm.generate())
         left.setPos(-10, 0, 0)
         left.setH(90)
         left.setTexture(wall_tex)
-        left.setTexScale(TextureStage.getDefault(), 2, 2)
-        add_collision_box(left, LPoint3(-10, 0, 0), LPoint3(10, .1, 10), "wall_left")
+        left.setTexScale(TextureStage.getDefault(), 1, 1)
+        add_collision_box(left, LPoint3(-10, 0, 0), LPoint3(10, 5, 10), "wall_left")
         
         right = self.render.attachNewNode(cm.generate())
         right.setPos(0, 10, 0)
         right.setTexture(wall_tex)
-        right.setTexScale(TextureStage.getDefault(), 2, 2)
-        add_collision_box(right, LPoint3(-10, -0, 0), LVector3(10, .1, 10), "wall_right")
+        right.setTexScale(TextureStage.getDefault(), 1, 1)
+        add_collision_box(right, LPoint3(-15, -0, 0), LVector3(10, 5, 10), "wall_right")
 
         ceiling = self.render.attachNewNode(cm.generate())
         ceiling.setPos(0, 0, 10)
@@ -86,8 +86,8 @@ class MyApp(ShowBase):
         ceiling.setTexture(ceiling_tex)
     
     def set_cam(self):
-        #camera.setPosHpr(15, -12.5, 7.5, 0, 0, 0)  # Set the camera
-        camera.setPosHpr(15, -12.5, 50, 0, 0, 0)
+        camera.setPosHpr(15, -12.5, 7.5, 0, 0, 0)  # Set the camera
+        #camera.setPosHpr(15, -12.5, 50, 0, 0, 0)
         camera.lookAt(0, 0, 5)
 
     def set_lights(self):
@@ -125,8 +125,8 @@ class MyApp(ShowBase):
             cNode.setFromCollideMask(BitMask32.bit(2))
             cNode.setIntoCollideMask(BitMask32.bit(2))
             self.cNodePath = box.attachNewNode(cNode)
-            self.picker.addCollider(self.cNodePath, self.furColHandler)
-            print(self.cNodePath.getName())
+            self.pusher.addCollider(self.cNodePath, box)
+            self.picker.addCollider(self.cNodePath, self.pusher)
 
             rad = 2
             proximityNode = CollisionNode('proximity')
@@ -144,8 +144,7 @@ class MyApp(ShowBase):
         self.picker = CollisionTraverser()
         self.pq = CollisionHandlerQueue()
         self.lineQ = CollisionHandlerQueue()
-        self.furColHandler = CollisionHandlerEvent()
-        self.furColHandler.setInPattern('furniture-into-furniture')
+        self.pusher = CollisionHandlerPusher()
 
         self.pickerNode = CollisionNode('mouseRay')
         self.pickerNP = camera.attachNewNode(self.pickerNode)
@@ -154,32 +153,6 @@ class MyApp(ShowBase):
         self.pickerNode.addSolid(self.pickerRay)
         self.picker.addCollider(self.pickerNP, self.pq)
 
-        self.accept('furniture-into-furniture', self.handleCollision)
-
-    def handleCollision(self, entry):
-        if 'fur' in entry.getIntoNodePath().getName() and entry.getFromNodePath().getName() in self.movObject.getName():
-            self.othObj = entry.getIntoNodePath().getParent()
-            self.pos = self.findAngle(self.movObject.getParent().getPos(), self.othObj.getPos())
-            if self.pos == 'front':
-                self.allowY = True
-                self.allowX = False
-            elif self.pos == 'back':
-                self.allowY = True
-                self.allowX = False
-            elif self.pos == 'left':
-                self.allowX = True
-                self.allowY = False
-            elif self.pos == 'right':
-                self.allowX = True
-                self.allowY = False
-
-        if 'wall' in entry.getIntoNodePath().getName() and entry.getFromNodePath().getName() in self.movObject.getName():
-            print(entry.getIntoNodePath().getName())
-            if 'left' in entry.getIntoNodePath().getName():
-                self.allowX = False
-            elif 'right' in entry.getIntoNodePath().getName():
-                self.allowY = False
-
 
     def mouseTask(self, task):
         if self.mouseWatcherNode.hasMouse():
@@ -187,13 +160,14 @@ class MyApp(ShowBase):
                 self.allowX = True
             if not hasattr(self, 'allowY'):
                 self.allowY = True
-            if not hasattr(self, 'prevPos'):
-                self.prevPos = None
             
             mpos = self.mouseWatcherNode.getMouse()
             self.pickerRay.setFromLens(self.camNode, mpos.getX(), mpos.getY())
 
             if self.dragging :
+                if not hasattr(self, 'prevPos'):
+                    self.prevPos = self.dragging.getPos()
+
                 nearPoint = render.getRelativePoint(
                     camera, self.pickerRay.getOrigin())
                 nearVec = render.getRelativeVector(
@@ -201,45 +175,23 @@ class MyApp(ShowBase):
                 newPos = PointAtZ(.5, nearPoint, nearVec)
 
                 if self.prevPos:
-                    self.direction = newPos - self.prevPos
-                    self.direction.normalize()
-                    
-                
+                    base_speed = 0
+                    acceleration_factor = 10
+                    direction = newPos - self.prevPos
+                    distance = direction.length()
+                    speed = base_speed + distance * acceleration_factor
+                    if speed > 40:
+                        speed = 40
+                    direction.normalize()
 
-                if hasattr(self, 'direction') and hasattr(self, 'pos'):
-                    print(self.direction)
-                    print(self.pos)
-                    if self.pos == 'front' and self.direction.getX() > 0:
-                        self.allowX = True
-                    elif self.pos == 'right' and self.direction.getY() > 0:
-                        self.allowY = True
-                    elif self.pos == 'back' and self.direction.getX() < 0:
-                        self.allowX = True
-                    elif self.pos == 'left' and self.direction.getY() < 0:
-                        self.allowY = True
-                try:
-                    if self.movObject is not None and self.othObj is not None:
-                        
-                            minMov, maxMov = self.movObject.getParent().getTightBounds()
-                            minOth, maxOth = self.othObj.getTightBounds()
+                    # Calculate the movement for this frame
+                    movement = direction * speed * globalClock.getDt()
 
-                            if (minMov.getY() > maxOth.getY() or maxMov.getY() < minOth.getY()) and (self.pos == 'front' or self.pos == 'back'):
-                                self.allowX = True
-                            elif (minMov.getX() > maxOth.getX() or maxMov.getX() < minOth.getX()) and (self.pos == 'left' or self.pos == 'right'):
-                                self.allowY = True
+                    # Update the object's position
+                    self.dragging.setPos(self.dragging.getPos() + movement)
 
-                    
-                except AttributeError:
-                    pass
-
-                if not self.allowX:
-                    newPos.setX(self.dragging.getX())
-                if not self.allowY:
-                    newPos.setY(self.dragging.getY())
-                self.dragging.setPos(newPos)
-
-                # Update previous position
-                self.prevPos = newPos
+                    # Update previous position
+                    self.prevPos = self.dragging.getPos()
 
             self.picker.traverse(render)
             if self.pq.getNumEntries() > 0:
@@ -286,7 +238,7 @@ class MyApp(ShowBase):
                 
                 if i < len(self.distanceTextNodes):
                     textNode = self.distanceTextNodes[i]
-                    textNode.node().setText(textNode.getName())#f"{distance:.2f}")
+                    textNode.node().setText(f"{distance:.2f}")
                     textNode.setPos(text_position)
                     textNode.lookAt(camera)
                     textNode.setHpr(90, 0, 0)
@@ -305,40 +257,6 @@ class MyApp(ShowBase):
                 textNode.removeNode()
             self.distanceTextNodes = []
         return Task.cont
-
-
-    def findAngle(self, obj1, obj2):
-        pos = None
-
-        object1 = {
-            'position': obj1,
-            'forward': np.array([0, 1, 0]),
-            'right': np.array([1, 0, 0])
-        }
-
-        object2 = {
-            'position': obj2
-        }
-
-        # Compute relative position
-        relative_position = object2['position'] - object1['position']
-
-        # Project onto reference directions
-        forward_proj = np.dot(relative_position, object1['forward'])
-        right_proj = np.dot(relative_position, object1['right'])
-        # Determine relative positions
-        if forward_proj > 0.5 and abs(forward_proj) > abs(right_proj):
-            pos = 'left'
-        elif forward_proj < -0.5 and abs(forward_proj) > abs(right_proj):
-            pos = 'right'
-        elif right_proj < -0.5 and abs(right_proj) > abs(forward_proj):
-            pos = 'front'
-        elif right_proj > 0.5 and abs(right_proj) > abs(forward_proj):
-            pos = 'back'
-
-        return pos
-
-
 
 
 def PointAtZ(z, point, vec):
