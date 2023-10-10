@@ -40,6 +40,7 @@ def generate_response(prompt):
 
 def audio_output(output, input):
     audio = st.empty()
+    no = st.empty()
     audio_byte_io = BytesIO()
     
     tts = gTTS(output, lang='en', tld='com')
@@ -62,7 +63,7 @@ def audio_output(output, input):
     </script>
     """
 
-    audio.markdown(audio_ended_js, unsafe_allow_html=True)
+    no.markdown(audio_ended_js, unsafe_allow_html=True)
 
 
 if 'input' not in st.session_state:
