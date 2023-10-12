@@ -87,7 +87,10 @@ def audio_output(output):
     recognition.start();
     """
     #audio.markdown(audio_html, unsafe_allow_html=True)
-    html(audio_html + speak)
+    #html(audio_html + speak)
+    assert isinstance(audio_html, str), f"audio_html is of type {type(audio_html)}"
+    assert isinstance(speak, str), f"speak is of type {type(speak)}"
+
     
 
 
