@@ -49,13 +49,28 @@ def audio_output(output, input):
     sound_b64 = base64.b64encode(audio_byte_io.getvalue()).decode("utf-8")
     audio_html = f'<audio id="audioElement" controls autoplay><source src="data:audio/mp3;base64,{sound_b64}"></audio>'
     audio.markdown(audio_html, unsafe_allow_html=True)
-    js_test = """
-                <script language="javascript">
-                    alert("this is a test!");
-                    console.log("test");
-                </script>
-            """
-    html(js_test)
+    st.markdown(
+        """
+        <div id="div"></div>
+        <script>
+            function  initTimer(periodInSeconds) {
+                var end = Date.now() + periodInSeconds * 1000;
+
+
+                var x = window.setInterval(function() {
+                    var timeLeft = Math.floor((end - Date.now()) / 1000);
+
+                    if(timeLeft < 0) { clearInterval(x); return; }
+
+                    $('#div').html('00:' + (timeLeft < 10 ? '0' + timeLeft : timeLeft));
+                },200);
+            }
+
+        initTimer(10);
+        </script>
+        """,
+        unsafe_allow_html=True,
+    )
     
 
 
