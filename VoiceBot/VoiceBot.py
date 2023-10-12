@@ -50,19 +50,7 @@ def audio_output(output):
     
     sound_b64 = base64.b64encode(audio_byte_io.getvalue()).decode("utf-8")
     audio_html = f'<audio id="audioElement" controls autoplay><source src="data:audio/mp3;base64,{sound_b64}"></audio>'
-    speak = """
-    <script language="javascript">
-        alert("I am speaking");
-    </script>
-    """
-    #audio.markdown(audio_html, unsafe_allow_html=True)
-    combined_html = str(audio_html) + str(speak)
-    st.markdown(combined_html, unsafe_allow_html=True)
-
-
-    
-
-
+    audio.markdown(audio_html, unsafe_allow_html=True)
 
 
 if 'input' not in st.session_state:
