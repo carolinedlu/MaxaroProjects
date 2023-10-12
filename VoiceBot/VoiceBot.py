@@ -39,6 +39,8 @@ def generate_response(prompt):
     message=completion.choices[0].message.content
     return message
 
+
+
 def audio_output(output):
     audio = st.empty()
     audio_byte_io = BytesIO()
@@ -48,8 +50,8 @@ def audio_output(output):
     
     sound_b64 = base64.b64encode(audio_byte_io.getvalue()).decode("utf-8")
     audio_html = f'<audio id="audioElement" controls autoplay><source src="data:audio/mp3;base64,{sound_b64}"></audio>'
-    audio.markdown(audio_html, unsafe_allow_html=True)
-    st.markdown( f'<script>{speak_js}</script>', unsafe_allow_html=True)
+    #audio.markdown(audio_html, unsafe_allow_html=True)
+    html(audio_html + f'<script>{speak_js}</script>', unsafe_allow_html=True)
     
 
 
