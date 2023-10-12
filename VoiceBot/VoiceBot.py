@@ -51,45 +51,46 @@ def audio_output(output):
     sound_b64 = base64.b64encode(audio_byte_io.getvalue()).decode("utf-8")
     audio_html = f'<audio id="audioElement" controls autoplay><source src="data:audio/mp3;base64,{sound_b64}"></audio>'
     speak = """
-    var value = "";
-    var rand = 0;
-    var recognition = new webkitSpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = true;
-    recognition.lang = 'en';
+    <script>
+        var value = "";
+        var rand = 0;
+        var recognition = new webkitSpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        recognition.lang = 'en';
 
-    document.dispatchEvent(new CustomEvent("GET_ONREC", {detail: 'start'}));
-    
-    recognition.onspeechstart = function () {
-        document.dispatchEvent(new CustomEvent("GET_ONREC", {detail: 'running'}));
-    }
-    recognition.onsoundend = function () {
-        document.dispatchEvent(new CustomEvent("GET_ONREC", {detail: 'stop'}));
-    }
-    recognition.onresult = function (e) {
-        var value2 = "";
-        for (var i = e.resultIndex; i < e.results.length; ++i) {
-            if (e.results[i].isFinal) {
-                value += e.results[i][0].transcript;
-                rand = Math.random();
-                
-            } else {
-                value2 += e.results[i][0].transcript;
-            }
+        document.dispatchEvent(new CustomEvent("GET_ONREC", {detail: 'start'}));
+        
+        recognition.onspeechstart = function () {
+            document.dispatchEvent(new CustomEvent("GET_ONREC", {detail: 'running'}));
         }
-        document.dispatchEvent(new CustomEvent("GET_TEXT", {detail: {t:value, s:rand}}));
-        document.dispatchEvent(new CustomEvent("GET_INTRM", {detail: value2}));
+        recognition.onsoundend = function () {
+            document.dispatchEvent(new CustomEvent("GET_ONREC", {detail: 'stop'}));
+        }
+        recognition.onresult = function (e) {
+            var value2 = "";
+            for (var i = e.resultIndex; i < e.results.length; ++i) {
+                if (e.results[i].isFinal) {
+                    value += e.results[i][0].transcript;
+                    rand = Math.random();
+                    
+                } else {
+                    value2 += e.results[i][0].transcript;
+                }
+            }
+            document.dispatchEvent(new CustomEvent("GET_TEXT", {detail: {t:value, s:rand}}));
+            document.dispatchEvent(new CustomEvent("GET_INTRM", {detail: value2}));
 
-    }
-    recognition.onerror = function(e) {
-        document.dispatchEvent(new CustomEvent("GET_ONREC", {detail: 'stop'}));
-    }
-    recognition.start();
+        }
+        recognition.onerror = function(e) {
+            document.dispatchEvent(new CustomEvent("GET_ONREC", {detail: 'stop'}));
+        }
+        recognition.start();
+    </script>
     """
     #audio.markdown(audio_html, unsafe_allow_html=True)
-    #html(audio_html + speak)
-    assert isinstance(audio_html, str), f"audio_html is of type {type(audio_html)}"
-    assert isinstance(speak, str), f"speak is of type {type(speak)}"
+    combined_html = str(audio_html) + str(speak)
+    html(combined_html)
 
     
 
