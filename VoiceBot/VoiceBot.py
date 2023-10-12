@@ -12,9 +12,6 @@ import base64
 import openai
 import os
 
-from selenium import webdriver
-
-driver = webdriver.Edge(executable_path="./msedgedriver.exe")
 openai.api_key = os.environ.get('api_key')
 openai.api_base = os.environ.get('api_base')
 openai.api_type = os.environ.get('api_type')
@@ -40,7 +37,7 @@ def generate_response(prompt):
     message=completion.choices[0].message.content
     return message
 
-def audio_output(output, input):
+def audio_output(output):
     audio = st.empty()
     audio_byte_io = BytesIO()
     
@@ -50,7 +47,7 @@ def audio_output(output, input):
     sound_b64 = base64.b64encode(audio_byte_io.getvalue()).decode("utf-8")
     audio_html = f'<audio id="audioElement" controls autoplay><source src="data:audio/mp3;base64,{sound_b64}"></audio>'
     audio.markdown(audio_html, unsafe_allow_html=True)
-    driver.execute_script(speak_js)
+    html(speak_js, height=600, width=490)
 
 
 
