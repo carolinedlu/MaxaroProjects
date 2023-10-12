@@ -56,7 +56,8 @@ def audio_output(output):
     </script>
     """
     #audio.markdown(audio_html, unsafe_allow_html=True)
-    html(audio_html + speak)
+    comb = str(audio_html) + str(speak)
+    html(comb)
 
 
     
