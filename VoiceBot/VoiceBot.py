@@ -90,7 +90,8 @@ def audio_output(output):
     """
     #audio.markdown(audio_html, unsafe_allow_html=True)
     combined_html = str(audio_html) + str(speak)
-    html(combined_html)
+    st.markdown(combined_html, unsafe_allow_html=True)
+
 
     
 
