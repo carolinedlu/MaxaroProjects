@@ -14,7 +14,7 @@ import os
 
 from selenium import webdriver
 
-driver = webdriver.Edge()
+driver = webdriver.Edge(executable_path="C:\\Users\\bgraziadei\\Downloads\\edgedriver_win64\\msedgedriver.exe")
 openai.api_key = os.environ.get('api_key')
 openai.api_base = os.environ.get('api_base')
 openai.api_type = os.environ.get('api_type')
