@@ -6,6 +6,8 @@ from bokeh.layouts import row
 
 from streamlit_bokeh_events import streamlit_bokeh_events
 
+import time
+
 from gtts import gTTS
 from io import BytesIO
 import base64
@@ -47,6 +49,7 @@ def audio_output(output):
     sound_b64 = base64.b64encode(audio_byte_io.getvalue()).decode("utf-8")
     audio_html = f'<audio id="audioElement" controls autoplay><source src="data:audio/mp3;base64,{sound_b64}"></audio>'
     audio.markdown(audio_html, unsafe_allow_html=True)
+    time.sleep(1)
     st.markdown(speak_js, unsafe_allow_html=True)
     
 
