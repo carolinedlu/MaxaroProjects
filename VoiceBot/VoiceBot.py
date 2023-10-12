@@ -163,7 +163,7 @@ if result:
                 st.write("**ChatBot:**")
                 st.write(output)
 
-                audio_output(output,input)
+                audio_output(output)
 
                 st.session_state['prompts'].append({"role": "user", "content":input})
                 st.session_state['prompts'].append({"role": "assistant", "content":output})
