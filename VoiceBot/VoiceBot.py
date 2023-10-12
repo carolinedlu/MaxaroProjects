@@ -51,7 +51,7 @@ def audio_output(output):
     sound_b64 = base64.b64encode(audio_byte_io.getvalue()).decode("utf-8")
     audio_html = f'<audio id="audioElement" controls autoplay><source src="data:audio/mp3;base64,{sound_b64}"></audio>'
     #audio.markdown(audio_html, unsafe_allow_html=True)
-    html(audio_html + f'<script>{speak_js}</script>', unsafe_allow_html=True)
+    html(audio_html + f'<script>{speak_js}</script>')
     
 
 
