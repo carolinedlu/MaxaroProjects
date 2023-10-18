@@ -10,30 +10,58 @@ import pandas as pd
 import random
 import streamlit as st
 
-
+i = 0
 uploaded_file = st.file_uploader("Upload File", type="xlsx", accept_multiple_files=True)
 
 if uploaded_file is not None:
-        df = pd.read_excel(uploaded_file)
+        if isinstance(uploaded_file, list):
+            for file in uploaded_file:
+                df = pd.read_excel(file)
 
-        def replace_words_v2(description, row):
-            if not isinstance(description, str):  # Controleren of de beschrijving een string is
-                return description
-            
-            for header in df.columns:
-                if header in description:
-                    value = row[header]
-                    if pd.isna(value):  # Als de waarde NaN is, sla deze kolom over
-                        continue
-                    description = description.replace(f'[{header}]', str(value))
-            return description
+                def replace_words_v2(description, row):
+                    if not isinstance(description, str):  # Controleren of de beschrijving een string is
+                        return description
+                    
+                    for header in df.columns:
+                        if header in description:
+                            value = row[header]
+                            if pd.isna(value):  # Als de waarde NaN is, sla deze kolom over
+                                continue
+                            description = description.replace(f'[{header}]', str(value))
+                    return description
 
 
 
-        # Update de beschrijvingen in de 'Product description' kolom opnieuw
-        df['Product description updated'] = df.apply(lambda row: replace_words_v2(row['Product description'], row), axis=1)
+                # Update de beschrijvingen in de 'Product description' kolom opnieuw
+                df['Product description updated'] = df.apply(lambda row: replace_words_v2(row['Product description'], row), axis=1)
 
-        # Toon de eerste paar rijen van de bijgewerkte DataFrame
-        df[['Product description', 'Product description updated']].head()
+                # Toon de eerste paar rijen van de bijgewerkte DataFrame
+                df[['Product description', 'Product description updated']].head()
 
-        excel = df.to_excel("output.xlsx")
+                excel = df.to_excel(f"output{i}.xlsx")
+                i += 1
+        
+        else:
+                df = pd.read_excel(uploaded_file)
+
+                def replace_words_v2(description, row):
+                    if not isinstance(description, str):  # Controleren of de beschrijving een string is
+                        return description
+                    
+                    for header in df.columns:
+                        if header in description:
+                            value = row[header]
+                            if pd.isna(value):  # Als de waarde NaN is, sla deze kolom over
+                                continue
+                            description = description.replace(f'[{header}]', str(value))
+                    return description
+
+
+
+                # Update de beschrijvingen in de 'Product description' kolom opnieuw
+                df['Product description updated'] = df.apply(lambda row: replace_words_v2(row['Product description'], row), axis=1)
+
+                # Toon de eerste paar rijen van de bijgewerkte DataFrame
+                df[['Product description', 'Product description updated']].head()
+
+                excel = df.to_excel("output.xlsx")
