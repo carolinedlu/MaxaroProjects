@@ -13,7 +13,7 @@ import streamlit as st
 def changed():
     st.experimental_rerun()
 
-uploaded_file = st.file_uploader("Upload File", type="xlsx", on_change=changed())
+uploaded_file = st.file_uploader("Upload File", type="xlsx", on_change=changed)
 
 if uploaded_file is not None:
     df = pd.read_excel(uploaded_file)
