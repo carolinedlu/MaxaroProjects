@@ -46,11 +46,9 @@ if uploaded_file:
     # If only one file is processed
     if len(all_files) == 1:
         file_name, file_data = all_files[0]
-        if st.button(f'Download {file_name}'):
-            st.download_button(label=f'Download {file_name}', data=file_data.getvalue(), file_name=file_name, key='single-file-button')
+        st.download_button(label=f'Download {file_name}', data=file_data.getvalue(), file_name=file_name, key='single-file-button')
 
     # If multiple files are processed
     elif len(all_files) > 1:
-        if st.button('Download Zipped Excel Files'):
-            zipped_data = get_zipped_files(all_files)
-            st.download_button(label='Download Zipped Excel Files', data=zipped_data, file_name='outputs.zip', key='zip-button')
+        zipped_data = get_zipped_files(all_files)
+        st.download_button(label='Download Zipped Excel Files', data=zipped_data, file_name='outputs.zip', key='zip-button')
