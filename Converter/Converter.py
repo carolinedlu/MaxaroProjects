@@ -39,16 +39,18 @@ if uploaded_file:
     
     for i, file in enumerate(files_to_process):
         df = pd.read_excel(file)
-        
-        # Update de beschrijvingen in de 'Product description' kolom opnieuw
         df['Product description updated'] = df.apply(lambda row: replace_words_v2(row['Product description'], row), axis=1)
-
-        # Toon de eerste paar rijen van de bijgewerkte DataFrame
-        df[['Product description', 'Product description updated']].head()
-
         excel_file = create_excel_file(df)
         all_files.append((f"output{i}.xlsx", excel_file))
 
-    if st.button('Download Excel Files'):
-        zipped_data = get_zipped_files(all_files)
-        st.download_button(label='Download Zipped Excel Files', data=zipped_data, file_name='outputs.zip', key='zip-button')
+    # If only one file is processed
+    if len(all_files) == 1:
+        file_name, file_data = all_files[0]
+        if st.button(f'Download {file_name}'):
+            st.download_button(label=f'Download {file_name}', data=file_data.getvalue(), file_name=file_name, key='single-file-button')
+
+    # If multiple files are processed
+    elif len(all_files) > 1:
+        if st.button('Download Zipped Excel Files'):
+            zipped_data = get_zipped_files(all_files)
+            st.download_button(label='Download Zipped Excel Files', data=zipped_data, file_name='outputs.zip', key='zip-button')
