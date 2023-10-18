@@ -10,7 +10,10 @@ import pandas as pd
 import random
 import streamlit as st
 
-uploaded_file = st.file_uploader("Upload File")
+def changed():
+    st.experimental_rerun()
+
+uploaded_file = st.file_uploader("Upload File", type="xlsx", on_change=changed())
 
 if uploaded_file is not None:
     df = pd.read_excel(uploaded_file)
