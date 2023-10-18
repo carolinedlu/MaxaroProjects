@@ -1,69 +1,59 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# # **Stap 1: Packages**
-# 
-# In Python worden "libraries" vaak vertaald als "bibliotheken" of "modules." Een library (bibliotheek) in Python is een verzameling van vooraf geschreven code die functies en hulpmiddelen biedt om specifieke taken uit te voeren zonder dat je die code zelf hoeft te schrijven. Deze bibliotheken kunnen functies en klassen bevatten die handig zijn voor verschillende soorten taken, zoals het verwerken van gegevens, het maken van grafieken, het uitvoeren van wiskundige berekeningen, en nog veel meer. Het gebruik van bibliotheken bespaart programmeurs tijd en moeite, omdat ze bestaande code kunnen hergebruiken in plaats van alles vanaf nul te schrijven.
-
-
 import pandas as pd
-import random
 import streamlit as st
+from io import BytesIO
+import zipfile
 
-i = 0
-uploaded_file = st.file_uploader("Upload File", type="xlsx", accept_multiple_files=True)
+def create_excel_file(df):
+    excel_file = BytesIO()
+    with pd.ExcelWriter(excel_file, engine='xlsxwriter', mode='xlsx', options={'remove_timezone': True}) as writer:
+        df.to_excel(writer, sheet_name='Sheet1', index=False)
+    return excel_file.getvalue()
 
-if uploaded_file is not None:
-        if isinstance(uploaded_file, list):
-            for file in uploaded_file:
-                df = pd.read_excel(file)
+def process_and_save_files(uploaded_files):
+    processed_files = []
 
-                def replace_words_v2(description, row):
-                    if not isinstance(description, str):  # Controleren of de beschrijving een string is
-                        return description
-                    
-                    for header in df.columns:
-                        if header in description:
-                            value = row[header]
-                            if pd.isna(value):  # Als de waarde NaN is, sla deze kolom over
-                                continue
-                            description = description.replace(f'[{header}]', str(value))
-                    return description
+    for i, file in enumerate(uploaded_files):
+        df = pd.read_excel(file)
 
+        def replace_words_v2(description, row):
+            if not isinstance(description, str):  # Controleren of de beschrijving een string is
+                return description
 
+            for header in df.columns:
+                if header in description:
+                    value = row[header]
+                    if pd.isna(value):  # Als de waarde NaN is, sla deze kolom over
+                        continue
+                    description = description.replace(f'[{header}]', str(value))
+            return description
 
-                # Update de beschrijvingen in de 'Product description' kolom opnieuw
-                df['Product description updated'] = df.apply(lambda row: replace_words_v2(row['Product description'], row), axis=1)
+        # Update de beschrijvingen in de 'Product description' kolom opnieuw
+        df['Product description updated'] = df.apply(lambda row: replace_words_v2(row['Product description'], row), axis=1)
 
-                # Toon de eerste paar rijen van de bijgewerkte DataFrame
-                df[['Product description', 'Product description updated']].head()
+        # Save the processed Excel file
+        excel_data = create_excel_file(df)
+        processed_files.append({'name': f'processed_file_{i}.xlsx', 'data': excel_data})
 
-                excel = df.to_excel(f"output{i}.xlsx")
-                i += 1
-                print("if")
-        
-        else:
-                df = pd.read_excel(uploaded_file)
+    return processed_files
 
-                def replace_words_v2(description, row):
-                    if not isinstance(description, str):  # Controleren of de beschrijving een string is
-                        return description
-                    
-                    for header in df.columns:
-                        if header in description:
-                            value = row[header]
-                            if pd.isna(value):  # Als de waarde NaN is, sla deze kolom over
-                                continue
-                            description = description.replace(f'[{header}]', str(value))
-                    return description
+st.title("Multiple File Upload and Processing")
 
+# Upload multiple files
+uploaded_files = st.file_uploader("Upload Files", type="xlsx", accept_multiple_files=True)
 
+if uploaded_files is not None and len(uploaded_files) > 0:
+    processed_files = process_and_save_files(uploaded_files)
 
-                # Update de beschrijvingen in de 'Product description' kolom opnieuw
-                df['Product description updated'] = df.apply(lambda row: replace_words_v2(row['Product description'], row), axis=1)
+    # Create a zip archive containing all processed files
+    zip_buffer = BytesIO()
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for file_info in processed_files:
+            zipf.writestr(file_info['name'], file_info['data'])
 
-                # Toon de eerste paar rijen van de bijgewerkte DataFrame
-                df[['Product description', 'Product description updated']].head()
+    # Provide download link for the zip archive
+    st.download_button(label='Download All Processed Files', data=zip_buffer.getvalue(), file_name='processed_files.zip')
 
-                excel = df.to_excel("output.xlsx")
-                print("else")
+# Display processed files individually
+for i, file_info in enumerate(processed_files):
+    st.subheader(f"Processed File {i + 1}")
+    st.download_button(label=f'Download Processed File {i + 1}', data=file_info['data'], file_name=file_info['name'])
