@@ -14,9 +14,8 @@ import streamlit as st
 uploaded_file = st.file_uploader("Upload File", type="xlsx", accept_multiple_files=True)
 
 if uploaded_file is not None:
-    if uploaded_file is not list:
         df = pd.read_excel(uploaded_file)
-        
+
         def replace_words_v2(description, row):
             if not isinstance(description, str):  # Controleren of de beschrijving een string is
                 return description
