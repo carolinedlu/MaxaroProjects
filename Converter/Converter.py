@@ -10,12 +10,12 @@ import pandas as pd
 import random
 import streamlit as st
 
-def changed():
-    st.experimental_rerun()
+tile = st.empty()
 
-uploaded_file = st.file_uploader("Upload File", type="xlsx", on_change=changed)
+uploaded_file = tile.file_uploader("Upload File", type="xlsx")
 
 if uploaded_file is not None:
+    tile = tile.file_uploader(disabled=True)
     df = pd.read_excel(uploaded_file)
 
     def replace_words_v2(description, row):
