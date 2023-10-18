@@ -1,6 +1,6 @@
 openpyxl==3.1.2
 pandas==2.1.1
 streamlit==1.27.0
-io==3.10
+Python-IO==0.3
 zipfile==3.3
 XlsxWriter==3.1.8
