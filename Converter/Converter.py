@@ -40,6 +40,7 @@ if uploaded_file is not None:
 
                 excel = df.to_excel(f"output{i}.xlsx")
                 i += 1
+                print("if")
         
         else:
                 df = pd.read_excel(uploaded_file)
@@ -65,3 +66,4 @@ if uploaded_file is not None:
                 df[['Product description', 'Product description updated']].head()
 
                 excel = df.to_excel("output.xlsx")
+                print("else")
