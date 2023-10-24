@@ -15,8 +15,8 @@ import os
 import azure.cognitiveservices.speech as speechsdk
 
 
-speech_key = os.environ.get("speech_key")
-service_region = os.environ.get("service_region")
+speech_key = os.environ.get('speech_key')
+service_region = os.environ.get('service_region')
 openai.api_key = os.environ.get('api_key')
 openai.api_base = os.environ.get('api_base')
 openai.api_type = os.environ.get('api_type')
