@@ -38,7 +38,7 @@ def generate_response(prompt):
 
     st.session_state['prompts'].append({"role": "user", "content":prompt})
     completion=openai.ChatCompletion.create(
-        engine = "PvA",
+        engine = "gpt-3.5-turbo",
         model="gpt-3.5-turbo",
         messages = st.session_state['prompts']
     )
