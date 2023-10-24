@@ -7,24 +7,16 @@ from bokeh.layouts import row
 from streamlit_bokeh_events import streamlit_bokeh_events
 
 import time
-
+import gtts
 from io import BytesIO
 import base64
 import openai
 import os
-import azure.cognitiveservices.speech as speechsdk
-
-
-speech_key = os.environ.get('speech_key')
-service_region = os.environ.get('service_region')
 openai.api_key = os.environ.get('api_key')
 openai.api_base = os.environ.get('api_base')
 openai.api_type = os.environ.get('api_type')
 openai.api_version = os.environ.get('api_version')
 
-speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=service_region)
-speech_config.speech_synthesis_voice_name = "en-US-GuyNeural"
-speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config)
 
 audio_byte_io = BytesIO()
 
@@ -38,7 +30,7 @@ def generate_response(prompt):
 
     st.session_state['prompts'].append({"role": "user", "content":prompt})
     completion=openai.ChatCompletion.create(
-        engine = "gpt-3.5-turbo",
+        engine = "PvA",
         model="gpt-3.5-turbo",
         messages = st.session_state['prompts']
     )
@@ -52,7 +44,8 @@ def audio_output(output):
     audio = st.empty()
     audio_byte_io = BytesIO()
     
-    speech_synthesizer.speak_text_async(output).get()
+    gtts = gTTS(output)
+
     
     sound_b64 = base64.b64encode(audio_byte_io.getvalue()).decode("utf-8")
     audio_html = f'<audio id="audioElement" controls autoplay><source src="data:audio/mp3;base64,{sound_b64}"></audio>'
