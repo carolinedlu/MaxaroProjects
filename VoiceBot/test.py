@@ -1,36 +1,70 @@
-# Copyright (c) Microsoft. All rights reserved.
-# Licensed under the MIT license. See LICENSE.md file in the project root for full license information.
-
-# <code>
 import azure.cognitiveservices.speech as speechsdk
+import openai
+import os
+from dotenv import load_dotenv
+import streamlit as st
 
-# Creates an instance of a speech config with specified subscription key and service region.
-# Replace with your own subscription key and service region (e.g., "westus").
+
+st.write("**Your input:**")
+input = st.empty()
+st.write("**ChatBot:**")
+output = st.empty()
+
+
+
+load_dotenv(r'C:\Users\bgraziadei\OneDrive - Maxaro\Documenten\GitHub\MaxaroProjects\VoiceBot\voiceBot.env')
+
+openai.api_key = os.environ.get('api_key')
+openai.api_base = os.environ.get('api_base')
+openai.api_type = os.environ.get('api_type')
+openai.api_version = os.environ.get('api_version')
+
 speech_key, service_region = "f89395d5832043ffa61704e4498a0954", "WestEurope"
-speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=service_region)
 
-# Set the voice name, refer to https://aka.ms/speech/voices/neural for full list.
-speech_config.speech_synthesis_voice_name = "en-US-GuyNeural"
+with open(r"C:\Users\bgraziadei\OneDrive - Maxaro\Documenten\GitHub\MaxaroProjects\VoiceBot\SystemMessage.txt") as f:
+    sys_message = f.read()
 
-# Creates a speech synthesizer using the default speaker as audio output.
-speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config)
+conversation = [{"role": "system", "content": sys_message}]
 
-# Receives a text from console input.
-print("Type some text that you want to speak...")
-text = input()
 
-# Synthesizes the received text to speech.
-# The synthesized speech is expected to be heard on the speaker with this line executed.
-result = speech_synthesizer.speak_text_async(text).get()
+def generate_response(prompt):
+    conversation.append({"role": "user", "content":prompt})
+    completion=openai.ChatCompletion.create(
+        engine = "PvA",
+        model="gpt-3.5-turbo",
+        messages = conversation
+    )
+    
+    message=completion.choices[0].message.content
+    return message
 
-# Checks result.
-if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
-    print("Speech synthesized to speaker for text [{}]".format(text))
-elif result.reason == speechsdk.ResultReason.Canceled:
-    cancellation_details = result.cancellation_details
-    print("Speech synthesis canceled: {}".format(cancellation_details.reason))
-    if cancellation_details.reason == speechsdk.CancellationReason.Error:
-        if cancellation_details.error_details:
-            print("Error details: {}".format(cancellation_details.error_details))
-    print("Did you update the subscription info?")
-# </code>
+
+def recognition():
+    while True:
+        result = ""
+        text = ""
+        input.write("*Speak now...*")
+        speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=service_region)
+        speech_config.speech_synthesis_voice_name = "en-US-GuyNeural"
+
+        # Creates a speech synthesizer using the default speaker as audio output.
+        speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config)
+        speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config)
+
+
+        text = speech_recognizer.recognize_once().text
+
+        if text:
+            input.write(text)
+            if text == "exit." or text == "Exit.":
+                break
+            result = generate_response(text)
+            conversation.append({"role": "assistant", "content":result})
+
+        if result:
+            output.write(result)
+            speech_synthesizer.speak_text_async(result).get()
+
+
+if __name__ == "__main__":
+    recognition()
