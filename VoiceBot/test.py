@@ -18,7 +18,8 @@ openai.api_base = os.environ.get('api_base')
 openai.api_type = os.environ.get('api_type')
 openai.api_version = os.environ.get('api_version')
 
-speech_key, service_region = "f89395d5832043ffa61704e4498a0954", "WestEurope"
+speech_key = os.environ.get('speech_key')
+service_region = os.environ.get('service_region')
 
 speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=service_region)
 speech_config.speech_synthesis_voice_name = "en-US-GuyNeural"
@@ -27,8 +28,8 @@ speech_config.speech_synthesis_voice_name = "en-US-GuyNeural"
 speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config)
 speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config)
 
-with open(r"C:\Users\bgraziadei\OneDrive - Maxaro\Documenten\GitHub\MaxaroProjects\VoiceBot\SystemMessage.txt") as f:
-    sys_message = f.read()
+#with open(r"C:\Users\bgraziadei\OneDrive - Maxaro\Documenten\GitHub\MaxaroProjects\VoiceBot\SystemMessage.txt") as f:
+#    sys_message = f.read()
 
 conversation = [{"role": "system", "content": ""}]
 
