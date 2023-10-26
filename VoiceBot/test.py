@@ -1,7 +1,6 @@
 import azure.cognitiveservices.speech as speechsdk
 import openai
 import os
-from dotenv import load_dotenv
 import streamlit as st
 import time
 
@@ -13,9 +12,6 @@ output = st.empty()
 
 
 init_prompt = f"Greet the customer according to the current day and time:{time.localtime().tm_mday}/{time.localtime().tm_mon}/{time.localtime().tm_year} {time.strftime('%H:%M:%S')}"
-
-
-load_dotenv(r'C:\Users\bgraziadei\OneDrive - Maxaro\Documenten\GitHub\MaxaroProjects\VoiceBot\voiceBot.env')
 
 openai.api_key = os.environ.get('api_key')
 openai.api_base = os.environ.get('api_base')
