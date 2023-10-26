@@ -3,13 +3,16 @@ import openai
 import os
 from dotenv import load_dotenv
 import streamlit as st
-
+import time
 
 st.write("**Your input:**")
 input = st.empty()
 st.write("**ChatBot:**")
 output = st.empty()
 
+
+
+init_prompt = f"Greet the customer according to the current day and time:{time.localtime().tm_mday}/{time.localtime().tm_mon}/{time.localtime().tm_year} {time.strftime('%H:%M:%S')}"
 
 
 load_dotenv(r'C:\Users\bgraziadei\OneDrive - Maxaro\Documenten\GitHub\MaxaroProjects\VoiceBot\voiceBot.env')
@@ -21,11 +24,22 @@ openai.api_version = os.environ.get('api_version')
 
 speech_key, service_region = "f89395d5832043ffa61704e4498a0954", "WestEurope"
 
+speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=service_region)
+speech_config.speech_synthesis_voice_name = "en-US-GuyNeural"
+
+# Creates a speech synthesizer using the default speaker as audio output.
+speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config)
+speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config)
+
 with open(r"C:\Users\bgraziadei\OneDrive - Maxaro\Documenten\GitHub\MaxaroProjects\VoiceBot\SystemMessage.txt") as f:
     sys_message = f.read()
 
-conversation = [{"role": "system", "content": sys_message}]
+conversation = [{"role": "system", "content": ""}]
 
+def reset():
+    speech_synthesizer.stop_speaking_async()
+    
+st.button(label="Reset", on_click=reset)
 
 def generate_response(prompt):
     conversation.append({"role": "user", "content":prompt})
@@ -38,20 +52,17 @@ def generate_response(prompt):
     message=completion.choices[0].message.content
     return message
 
+init_response = generate_response(init_prompt)
+output.write(init_response)
+speech_synthesizer.speak_text_async(init_response).get()
+conversation.append({"role": "user", "content":init_prompt})
+conversation.append({"role": "assistant", "content":init_response})
 
 def recognition():
     while True:
         result = ""
         text = ""
         input.write("*Speak now...*")
-        speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=service_region)
-        speech_config.speech_synthesis_voice_name = "en-US-GuyNeural"
-
-        # Creates a speech synthesizer using the default speaker as audio output.
-        speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config)
-        speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config)
-
-
         text = speech_recognizer.recognize_once().text
 
         if text:
