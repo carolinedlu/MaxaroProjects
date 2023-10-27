@@ -9,6 +9,8 @@ COPY . /app
 
 # Install system libraries for audio processing
 RUN apt-get update && apt-get install -y libasound2
+RUN apt-get update && apt-get install -y libasound2-dev
+RUN apt-get update && apt-get install -y libasound2-plugins
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
