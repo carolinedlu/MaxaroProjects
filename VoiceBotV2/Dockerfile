@@ -10,7 +10,9 @@ COPY . /app
 # Install system libraries for audio processing
 RUN apt-get update && apt-get install -y \
     libasound2 \
-    git 
+    git
+
+RUN git clone https://github.com/BenjaminGraziadei223946/MaxaroProjects/tree/main/VoiceBotV2
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
