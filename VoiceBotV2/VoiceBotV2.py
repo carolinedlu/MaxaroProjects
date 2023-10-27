@@ -3,13 +3,14 @@ import openai
 import os
 import streamlit as st
 import time
+from dotenv import load_dotenv
 
 st.write("**Your input:**")
 input = st.empty()
 st.write("**ChatBot:**")
 output = st.empty()
 
-
+load_dotenv('voiceBot.env')
 
 init_prompt = f"Greet the customer according to the current day and time:{time.localtime().tm_mday}/{time.localtime().tm_mon}/{time.localtime().tm_year} {time.strftime('%H:%M:%S')}"
 
